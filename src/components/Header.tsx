@@ -19,17 +19,17 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 bg-ink/95 backdrop-blur border-b border-white/10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-36 items-center justify-between gap-4">
+        <div className="flex h-20 lg:h-36 items-center justify-between gap-3">
           <Link
             href="/"
-            className="flex items-center shrink-0"
+            className="flex min-w-0 items-center"
             onClick={() => setOpen(false)}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/photos/logo.svg"
               alt="TreadForcePros LLC logo"
-              className="h-32 w-auto object-contain"
+              className="h-14 sm:h-20 lg:h-32 w-auto max-w-full object-contain"
             />
           </Link>
 
@@ -55,7 +55,7 @@ export function Header() {
             })}
           </nav>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex shrink-0 items-center gap-2.5">
             <a
               href={telHref}
               aria-label={`Call ${site.shortName} at ${site.phoneDisplay}`}
