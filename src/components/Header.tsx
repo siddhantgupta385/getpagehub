@@ -19,7 +19,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 bg-ink/95 backdrop-blur border-b border-white/10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-20 lg:h-36 items-center justify-between gap-3">
+        <div className="flex h-32 lg:h-36 items-center justify-between gap-3">
           <Link
             href="/"
             className="flex min-w-0 items-center"
@@ -29,7 +29,7 @@ export function Header() {
             <img
               src="/photos/logo.svg"
               alt="TreadForcePros LLC logo"
-              className="h-14 sm:h-20 lg:h-32 w-auto max-w-full object-contain"
+              className="h-28 sm:h-28 lg:h-32 w-auto max-w-full object-contain"
             />
           </Link>
 
