@@ -27,7 +27,7 @@ export function Header() {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/photos/logo.svg"
+              src="/photos/treadforcepros-logo-alpha-img.png"
               alt="TreadForcePros LLC logo"
               className="h-28 sm:h-28 lg:h-32 w-auto max-w-full object-contain"
             />

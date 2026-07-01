@@ -1,49 +1,34 @@
-import { site } from "@/lib/site";
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { site, reviews, googleRating } from "@/lib/site";
 import { Stars } from "./Stars";
 
-type PlaceReview = {
-  rating: number;
-  text?: { text?: string };
-  originalText?: { text?: string };
-  relativePublishTimeDescription?: string;
-  authorAttribution?: {
-    displayName?: string;
-    photoUri?: string;
-    uri?: string;
-  };
-};
+export function Reviews() {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
 
-type PlaceDetails = {
-  rating?: number;
-  userRatingCount?: number;
-  reviews?: PlaceReview[];
-};
+  const goTo = useCallback((i: number) => {
+    setIndex(((i % reviews.length) + reviews.length) % reviews.length);
+  }, []);
 
-async function getPlaceDetails(): Promise<PlaceDetails | null> {
-  const key = process.env.GOOGLE_PLACES_API_KEY;
-  if (!key) return null;
+  useEffect(() => {
+    if (paused) return;
+    const id = setInterval(() => {
+      setIndex((i) => (i + 1) % reviews.length);
+    }, 4500);
+    return () => clearInterval(id);
+  }, [paused]);
 
-  try {
-    const res = await fetch(
-      `https://places.googleapis.com/v1/places/${site.google.placeId}`,
-      {
-        headers: {
-          "X-Goog-Api-Key": key,
-          "X-Goog-FieldMask": "rating,userRatingCount,reviews",
-        },
-        next: { revalidate: 86400 },
-      },
-    );
-    if (!res.ok) return null;
-    return (await res.json()) as PlaceDetails;
-  } catch {
-    return null;
-  }
-}
-
-export async function Reviews() {
-  const details = await getPlaceDetails();
-  const reviews = details?.reviews ?? [];
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const card = track.children[index] as HTMLElement | undefined;
+    const first = track.children[0] as HTMLElement | undefined;
+    if (!card || !first) return;
+    track.scrollTo({ left: card.offsetLeft - first.offsetLeft, behavior: "smooth" });
+  }, [index]);
 
   return (
     <section className="relative overflow-hidden bg-surface py-20" id="reviews">
@@ -62,79 +47,89 @@ export async function Reviews() {
             Say
           </h2>
 
-          {details?.rating ? (
-            <div className="mt-6 inline-flex items-center gap-4 rounded-2xl bg-card px-6 py-4 ring-1 ring-white/10 shadow-lg shadow-black/20">
-              <span className="text-4xl font-extrabold leading-none text-white">
-                {details.rating.toFixed(1)}
+          <div className="mt-6 inline-flex items-center gap-4 rounded-2xl bg-card px-6 py-4 ring-1 ring-white/10 shadow-lg shadow-black/20">
+            <span className="text-4xl font-extrabold leading-none text-white">
+              {googleRating.rating.toFixed(1)}
+            </span>
+            <span className="h-10 w-px bg-white/10" />
+            <span className="text-left">
+              <Stars rating={googleRating.rating} />
+              <span className="mt-1 block text-sm text-slate-400">
+                Rated by our Google customers
               </span>
-              <span className="h-10 w-px bg-white/10" />
-              <span className="text-left">
-                <Stars rating={details.rating} />
-                {details.userRatingCount ? (
-                  <span className="mt-1 block text-sm text-slate-400">
-                    Based on {details.userRatingCount} Google reviews
-                  </span>
-                ) : null}
-              </span>
-            </div>
-          ) : null}
+            </span>
+          </div>
         </div>
 
-        {reviews.length > 0 ? (
-          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {reviews.slice(0, 6).map((r, i) => (
+        <div
+          className="relative mt-12"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          onFocusCapture={() => setPaused(true)}
+          onBlurCapture={() => setPaused(false)}
+        >
+          <div
+            ref={trackRef}
+            className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {reviews.map((r, i) => (
               <article
                 key={i}
-                className="group relative flex flex-col overflow-hidden rounded-2xl bg-card p-6 ring-1 ring-white/10 transition-all duration-300 hover:-translate-y-1 hover:ring-brand/50 hover:shadow-xl hover:shadow-brand/10"
+                className="group relative flex shrink-0 basis-full snap-start flex-col overflow-hidden rounded-2xl bg-card p-6 ring-1 ring-white/10 sm:basis-[calc(50%-12px)]"
               >
-                <span className="absolute -top-3 left-5 h-1.5 w-16 rounded-full bg-gradient-to-r from-brand to-brand-light opacity-0 transition-opacity group-hover:opacity-100" />
                 <QuoteIcon className="absolute right-4 top-4 h-12 w-12 text-brand/10" />
                 <Stars rating={r.rating} />
-                <p className="relative mt-4 flex-1 text-slate-200 leading-relaxed line-clamp-6">
-                  {r.text?.text ?? r.originalText?.text}
+                <p className="relative mt-4 flex-1 text-slate-200 leading-relaxed">
+                  {r.text}
                 </p>
                 <div className="mt-5 flex items-center gap-3 border-t border-white/10 pt-4">
-                  {r.authorAttribution?.photoUri ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={r.authorAttribution.photoUri}
-                      alt={r.authorAttribution.displayName ?? "Reviewer"}
-                      referrerPolicy="no-referrer"
-                      className="h-10 w-10 rounded-full object-cover ring-1 ring-white/10"
-                    />
-                  ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand/20 font-semibold text-brand-light">
-                      {r.authorAttribution?.displayName?.charAt(0) ?? "G"}
-                    </div>
-                  )}
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand/20 font-semibold text-brand-light">
+                    {r.name.charAt(0)}
+                  </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-white">
-                      {r.authorAttribution?.displayName ?? "Google User"}
+                      {r.name}
                     </p>
-                    <p className="text-xs text-slate-400">
-                      {r.relativePublishTimeDescription}
-                    </p>
+                    <p className="text-xs text-slate-400">Verified Google review</p>
                   </div>
                   <GoogleIcon className="ml-auto h-5 w-5 shrink-0 opacity-70" />
                 </div>
               </article>
             ))}
           </div>
-        ) : (
-          <div className="relative mt-12 mx-auto max-w-2xl overflow-hidden rounded-2xl bg-card p-8 text-center ring-1 ring-white/10">
-            <QuoteIcon className="absolute -right-2 -top-2 h-20 w-20 text-brand/10" />
-            <div className="flex justify-center">
-              <Stars rating={5} />
+
+          <div className="mt-6 flex items-center justify-center gap-4">
+            <button
+              type="button"
+              onClick={() => goTo(index - 1)}
+              aria-label="Previous reviews"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-card text-white ring-1 ring-white/10 transition-colors hover:bg-brand"
+            >
+              <ArrowIcon className="h-5 w-5 rotate-180" />
+            </button>
+            <div className="flex items-center gap-2">
+              {reviews.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => goTo(i)}
+                  aria-label={`Go to review ${i + 1}`}
+                  className={`h-2 rounded-full transition-all ${
+                    i === index ? "w-6 bg-brand-light" : "w-2 bg-white/20 hover:bg-white/40"
+                  }`}
+                />
+              ))}
             </div>
-            <p className="mt-4 text-xl font-bold text-white">
-              Trusted across Murfreesboro &amp; Rutherford County
-            </p>
-            <p className="mt-2 text-slate-300">
-              Read what our customers are saying on our Google Business Profile —
-              and share your own experience after we get you back on the road.
-            </p>
+            <button
+              type="button"
+              onClick={() => goTo(index + 1)}
+              aria-label="Next reviews"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-card text-white ring-1 ring-white/10 transition-colors hover:bg-brand"
+            >
+              <ArrowIcon className="h-5 w-5" />
+            </button>
           </div>
-        )}
+        </div>
 
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
           <a
@@ -157,6 +152,18 @@ export async function Reviews() {
         </div>
       </div>
     </section>
+  );
+}
+
+function ArrowIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path
+        fillRule="evenodd"
+        d="M7.293 14.707a1 1 0 0 1 0-1.414L10.586 10 7.293 6.707a1 1 0 0 1 1.414-1.414l4 4a1 1 0 0 1 0 1.414l-4 4a1 1 0 0 1-1.414 0Z"
+        clipRule="evenodd"
+      />
+    </svg>
   );
 }
 

@@ -80,7 +80,7 @@ export function Footer() {
             <div className="flex items-center md:justify-end">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/photos/logo.svg"
+                src="/photos/treadforcepros-logo-alpha-img.png"
                 alt="TreadForcePros LLC logo"
                 className="h-36 w-auto object-contain"
               />

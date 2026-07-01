@@ -70,7 +70,7 @@ export default function RootLayout({
     description:
       "Mobile tire service, emergency roadside assistance, and jumpstart services in Murfreesboro, TN and surrounding Rutherford County areas.",
     image: `${site.url}/photos/og.png`,
-    logo: `${site.url}/photos/logo.svg`,
+    logo: `${site.url}/photos/treadforcepros-logo-alpha-img.png`,
     telephone: `+1${site.phoneRaw}`,
     email: site.email,
     url: site.url,
