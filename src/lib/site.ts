@@ -51,8 +51,7 @@ export const services: {
     short: "On-site tire help",
     blurb:
       "Flat tire assistance, tire changes, and tire replacement support brought directly to your location.",
-    image: "/photos/IMG_3043.jpg",
-    imagePosition: "object-[60%_68%]",
+    image: "/photos/mobile-tire-service-replacement-img-murfreesboro-tn.jpg",
   },
   {
     slug: "emergency-roadside-assistance",

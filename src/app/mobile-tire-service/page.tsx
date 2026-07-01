@@ -24,8 +24,8 @@ export default function MobileTireServicePage() {
         eyebrow="Service Details"
         heading="On-Site Tire Help, Wherever You Are"
         intro="We come to you with the tools and expertise to get your tire issue handled without a trip to the shop."
-        image="/photos/IMG_3045.jpg"
-        imageAlt="Technician performing a tire change"
+        image="/photos/mobile-tire-service-car-truck-replacement-img-murfreesboro-tn.jpg"
+        imageAlt="Technician performing a tire change in Murfreesboro, TN"
         items={[
           "Flat tire assistance",
           "Tire changes",

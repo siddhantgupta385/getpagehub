@@ -19,24 +19,22 @@ export default function HomePage() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-ink">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
-          <div className="relative isolate overflow-hidden rounded-3xl border border-white/10 bg-brand-dark shadow-2xl shadow-black/50">
-            {/* Seamless background: faded photo + gradients that blend into the dark base */}
-            <Image
-              src="/photos/mobile-tire-service-lamborghini-tire-replacement-img-murfreesboro-tn.jpg"
-              alt=""
-              aria-hidden
-              fill
-              priority
-              className="object-cover object-center opacity-40"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/90 to-ink/40" />
-            <div className="absolute inset-0 bg-gradient-to-t from-ink via-transparent to-ink/50" />
-            <div className="pointer-events-none absolute right-0 top-1/2 hidden h-[680px] w-[680px] -translate-y-1/2 translate-x-1/4 rounded-full bg-brand/25 blur-3xl lg:block" />
+      <section className="relative isolate overflow-hidden bg-brand-dark">
+        {/* Seamless background: faded photo + gradients that blend into the dark base */}
+        <Image
+          src="/photos/mobile-tire-service-lamborghini-tire-replacement-img-murfreesboro-tn.jpg"
+          alt=""
+          aria-hidden
+          fill
+          priority
+          className="object-cover object-center opacity-40"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/90 to-ink/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink via-transparent to-ink/50" />
+        <div className="pointer-events-none absolute right-0 top-1/2 hidden h-[680px] w-[680px] -translate-y-1/2 translate-x-1/4 rounded-full bg-brand/25 blur-3xl lg:block" />
 
-            <div className="relative px-6 py-16 sm:px-10 sm:py-20 lg:px-14">
-              <div className="grid items-center gap-12 lg:grid-cols-2">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+          <div className="grid items-center gap-12 lg:grid-cols-2">
                 {/* Left: headline + CTAs */}
                 <div className="max-w-2xl animate-fade-up">
                   <span className="inline-flex items-center gap-2 rounded-full bg-brand/20 px-4 py-1.5 text-sm font-medium text-blue-200 ring-1 ring-inset ring-brand/40">
@@ -128,8 +126,6 @@ export default function HomePage() {
                   </span>
                   <ChevronIcon className="h-5 w-5 shrink-0 text-slate-500 transition-transform group-hover:translate-x-1 group-hover:text-brand-light" />
                 </a>
-              </div>
-                </div>
               </div>
             </div>
           </div>
