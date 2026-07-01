@@ -198,6 +198,30 @@ export const gallery: { src: string; alt: string }[] = [
     src: "/photos/mobile-tire-service-family-car-roadside-battery-jumpstart-murfreesboro-tn.jpg",
     alt: "Roadside battery jumpstart for a family car in Murfreesboro, TN",
   },
+  {
+    src: "/photos/mobile-tire-24-7-service-porche-full-tire-replacement-img-murfreesboro-tn.jpg",
+    alt: "Porsche full tire replacement handled on-site in Murfreesboro, TN",
+  },
+  {
+    src: "/photos/mobile-tire-service-bmw-car-truck-replacement-img-murfreesboro-tn.jpg",
+    alt: "BMW tire replacement by TreadForcePros in Murfreesboro, TN",
+  },
+  {
+    src: "/photos/mobile-tire-service-rv-tire-replacement-img-murfreesboro-tn.jpg",
+    alt: "RV tire replacement service in Murfreesboro, TN",
+  },
+  {
+    src: "/photos/mobile-tire-service-diesel-truck-tire-replacement-img-murfreesboro-tn.jpg",
+    alt: "Diesel truck tire replacement by TreadForcePros in Murfreesboro, TN",
+  },
+  {
+    src: "/photos/mobile-tire-service-uhaul-truck-tire-replacement-img-murfreesboro-tn.jpg",
+    alt: "U-Haul moving truck tire replacement in Murfreesboro, TN",
+  },
+  {
+    src: "/photos/mobile-tire-service-large-truck-fleet-tire-repair-img-murfreesboro-tn.jpg",
+    alt: "Large fleet truck tire repair by TreadForcePros in Murfreesboro, TN",
+  },
 ];
 
 export const telHref = `tel:+1${site.phoneRaw}`;
