@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { serviceAreas, site } from "@/lib/site";
 
 function Check({ className = "mt-0.5 h-5 w-5 shrink-0 text-brand" }: { className?: string }) {
   return (
@@ -55,6 +54,7 @@ export function SplitFeature({
             src={image}
             alt={imageAlt}
             fill
+            sizes="(max-width: 1024px) 100vw, 50vw"
             className="object-cover"
           />
         </div>
@@ -97,28 +97,6 @@ export function BenefitGrid({
                 {item.text}
               </p>
             </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-export function ServiceAreaStrip() {
-  return (
-    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-      <div className="rounded-3xl bg-ink px-6 py-12 sm:px-12 text-center">
-        <h2 className="text-2xl sm:text-3xl font-bold text-white">
-          Serving {site.primaryCity} &amp; Rutherford County
-        </h2>
-        <div className="mt-7 flex flex-wrap justify-center gap-2.5">
-          {serviceAreas.map((area) => (
-            <span
-              key={area}
-              className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-inset ring-white/15"
-            >
-              {area}
-            </span>
           ))}
         </div>
       </div>

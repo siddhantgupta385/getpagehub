@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { PageHero } from "@/components/PageHero";
-import { SplitFeature, BenefitGrid, ServiceAreaStrip } from "@/components/Sections";
+import { SplitFeature, BenefitGrid } from "@/components/Sections";
+import { ServiceAreaSection } from "@/components/ServiceAreaSection";
+import { FAQ } from "@/components/FAQ";
 import { CTASection } from "@/components/CTASection";
+import { servicePageFaqs } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Jumpstart Service in Murfreesboro, TN",
@@ -21,6 +24,7 @@ export default function JumpstartsPage() {
       />
 
       <SplitFeature
+        reverse
         eyebrow="Service Details"
         heading="Fast Jumpstart Assistance"
         intro="When your battery dies, we come to you and get your vehicle powered up so you can get on with your day."
@@ -44,7 +48,13 @@ export default function JumpstartsPage() {
         ]}
       />
 
-      <ServiceAreaStrip />
+      <ServiceAreaSection />
+
+      <FAQ
+        items={servicePageFaqs}
+        description="Answers to common questions about jumpstart service in Murfreesboro, TN."
+        eyebrowClassName="text-brand-light"
+      />
 
       <CTASection
         title="Need a jumpstart in Murfreesboro, TN?"

@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
-import { PageHero } from "@/components/PageHero";
-import { SplitFeature, BenefitGrid, ServiceAreaStrip } from "@/components/Sections";
+import { MobileTireServiceHero } from "@/components/MobileTireServiceHero";
+import { SplitFeature, BenefitGrid } from "@/components/Sections";
+import { ServiceAreaSection } from "@/components/ServiceAreaSection";
+import { FAQ } from "@/components/FAQ";
 import { CTASection } from "@/components/CTASection";
+import { servicePageFaqs } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Mobile Tire Service in Murfreesboro, TN",
@@ -13,14 +16,10 @@ export const metadata: Metadata = {
 export default function MobileTireServicePage() {
   return (
     <>
-      <PageHero
-        title="Mobile Tire Service in Murfreesboro, TN"
-        subtitle="Tire trouble can happen anywhere. TreadForcePros LLC brings convenient tire service directly to your location."
-        image="/photos/mobile-tire-service-truck-tire-service-blowout-repair-img-murfreesboro-tn.jpg"
-        imageAlt="Mobile tire service in Murfreesboro, TN"
-      />
+      <MobileTireServiceHero />
 
       <SplitFeature
+        reverse
         eyebrow="Service Details"
         heading="On-Site Tire Help, Wherever You Are"
         intro="We come to you with the tools and expertise to get your tire issue handled without a trip to the shop."
@@ -58,7 +57,13 @@ export default function MobileTireServicePage() {
         ]}
       />
 
-      <ServiceAreaStrip />
+      <ServiceAreaSection />
+
+      <FAQ
+        items={servicePageFaqs}
+        description="Answers to common questions about mobile tire service in Murfreesboro, TN."
+        eyebrowClassName="text-brand-light"
+      />
 
       <CTASection
         title="Need mobile tire service in Murfreesboro, TN?"

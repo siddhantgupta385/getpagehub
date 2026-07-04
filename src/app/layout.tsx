@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { site, services } from "@/lib/site";
+import { site, services, serviceAreas } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -74,16 +74,7 @@ export default function RootLayout({
     telephone: `+1${site.phoneRaw}`,
     email: site.email,
     url: site.url,
-    areaServed: [
-      "Murfreesboro, TN",
-      "Franklin, TN",
-      "Lebanon, TN",
-      "Mt Juliet, TN",
-      "Smyrna, TN",
-      "Lavergne, TN",
-      "Brentwood, TN",
-      "Rutherford County, TN",
-    ],
+    areaServed: [...serviceAreas],
     address: {
       "@type": "PostalAddress",
       addressLocality: "Murfreesboro",

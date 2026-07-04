@@ -6,13 +6,17 @@ import { Reviews } from "@/components/Reviews";
 import { FAQ } from "@/components/FAQ";
 import { Gallery } from "@/components/Gallery";
 import { Stars } from "@/components/Stars";
+import { ServiceAreaPills } from "@/components/ServiceAreaPills";
+import { GoogleMapEmbed } from "@/components/GoogleMapEmbed";
 import {
   site,
   services,
-  serviceAreas,
   googleRating,
   telHref,
   smsHref,
+  faqs,
+  homepageCta,
+  homepageFaqDescription,
 } from "@/lib/site";
 
 export default function HomePage() {
@@ -260,34 +264,12 @@ export default function HomePage() {
               Based in {site.primaryCity}, we travel across Rutherford County and
               nearby areas to bring tire and roadside help to you.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              {serviceAreas.map((area) => (
-                <span
-                  key={area}
-                  className="inline-flex items-center gap-2 rounded-full bg-white/5 px-5 py-2.5 text-sm font-medium text-white ring-1 ring-white/10"
-                >
-                  <svg className="h-4 w-4 text-brand-light" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fillRule="evenodd" d="M10 2a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6Zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z" clipRule="evenodd" />
-                  </svg>
-                  {area}
-                </span>
-              ))}
+            <div className="mt-8">
+              <ServiceAreaPills />
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-3xl border border-white/10 shadow-2xl shadow-black/40">
-            <iframe
-              title="TreadForcePros LLC service area map — Murfreesboro, TN and surrounding counties"
-              src="https://www.google.com/maps?q=Murfreesboro,+Tennessee&z=9&output=embed"
-              width="100%"
-              height="420"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              className="block h-[340px] w-full sm:h-[420px] grayscale-[0.2]"
-              style={{ border: 0 }}
-              allowFullScreen
-            />
-          </div>
+          <GoogleMapEmbed />
         </div>
       </section>
 
@@ -295,9 +277,9 @@ export default function HomePage() {
 
       <Reviews />
 
-      <FAQ />
+      <FAQ items={faqs} description={homepageFaqDescription} />
 
-      <CTASection />
+      <CTASection title={homepageCta.title} text={homepageCta.text} />
     </>
   );
 }

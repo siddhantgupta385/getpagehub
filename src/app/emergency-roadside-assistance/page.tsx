@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { PageHero } from "@/components/PageHero";
-import { SplitFeature, BenefitGrid, ServiceAreaStrip } from "@/components/Sections";
+import { SplitFeature, BenefitGrid } from "@/components/Sections";
+import { ServiceAreaSection } from "@/components/ServiceAreaSection";
+import { FAQ } from "@/components/FAQ";
 import { CTASection } from "@/components/CTASection";
+import { servicePageFaqs } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Emergency Roadside Assistance in Murfreesboro, TN",
@@ -21,6 +24,7 @@ export default function RoadsidePage() {
       />
 
       <SplitFeature
+        reverse
         eyebrow="Roadside Services"
         heading="Dependable Help When You're Stuck"
         intro="From flats to dead batteries, we deliver fast roadside support to get you safely back on your way."
@@ -46,7 +50,13 @@ export default function RoadsidePage() {
         ]}
       />
 
-      <ServiceAreaStrip />
+      <ServiceAreaSection />
+
+      <FAQ
+        items={servicePageFaqs}
+        description="Answers to common questions about emergency roadside assistance in Murfreesboro, TN."
+        eyebrowClassName="text-brand-light"
+      />
 
       <CTASection
         title="Stranded in Murfreesboro?"

@@ -3,6 +3,7 @@ import {
   site,
   serviceAreas,
   services,
+  serviceAreaHeading,
   telHref,
   smsHref,
   mailHref,
@@ -105,7 +106,7 @@ export function Footer() {
           <p>
             &copy; {new Date().getFullYear()} {site.name}. All Rights Reserved.
           </p>
-          <p>Serving Murfreesboro, TN &amp; Rutherford County</p>
+          <p>{serviceAreaHeading}</p>
         </div>
       </div>
     </footer>

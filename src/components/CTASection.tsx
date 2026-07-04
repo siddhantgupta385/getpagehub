@@ -1,11 +1,11 @@
 import { site, telHref, smsHref } from "@/lib/site";
 
 export function CTASection({
-  title = "Need tire help or roadside assistance?",
-  text = "Call TreadForcePros LLC today for fast, professional mobile tire and roadside service across Murfreesboro and Rutherford County.",
+  title,
+  text,
 }: {
-  title?: string;
-  text?: string;
+  title: string;
+  text: string;
 }) {
   return (
     <section className="relative overflow-hidden bg-ink border-t border-white/10">
@@ -18,13 +18,13 @@ export function CTASection({
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <a
             href={telHref}
-            className="inline-flex items-center gap-2 rounded-full bg-brand px-7 py-3.5 text-base font-semibold text-white shadow-lg shadow-brand/30 hover:bg-brand-light transition-colors"
+            className="inline-flex items-center gap-2 rounded-full bg-brand px-7 py-3.5 text-base font-semibold text-white shadow-lg shadow-brand/30 hover:bg-brand-light transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
           >
             Call {site.phoneDisplay}
           </a>
           <a
             href={smsHref}
-            className="inline-flex items-center gap-2 rounded-full border border-white/30 px-7 py-3.5 text-base font-semibold text-white hover:bg-white/10 transition-colors"
+            className="inline-flex items-center gap-2 rounded-full border border-white/30 px-7 py-3.5 text-base font-semibold text-white hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
           >
             Text Us Now
           </a>

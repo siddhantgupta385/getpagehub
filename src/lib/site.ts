@@ -18,8 +18,13 @@ export const site = {
     placeId: "ChIJmxoyQ60TLEURb5_zHBmE8lc",
     writeReview:
       "https://search.google.com/local/writereview?placeid=ChIJmxoyQ60TLEURb5_zHBmE8lc",
+    mapEmbedUrl:
+      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d207846.03894268458!2d-86.518447!3d35.845654!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x886399ac68430b99%3A0x57f28464941cf99b!2sMurfreesboro%2C%20TN!5e0!3m2!1sen!2sus!4v1735689600000!5m2!1sen!2sus",
   },
 } as const;
+
+export const serviceAreaHeading =
+  "Serving Murfreesboro, TN & Rutherford County";
 
 export const serviceAreas = [
   "Murfreesboro, TN",
@@ -144,11 +149,54 @@ export const reviews: {
   },
 ];
 
-export const faqs: { question: string; answer: string }[] = [
+export type FaqItem = { question: string; answer: string };
+
+export const servicePageFaqs: FaqItem[] = [
+  {
+    question: "How quickly can your mobile tire service reach me?",
+    answer:
+      `TreadForcePros responds as quickly as possible across Murfreesboro and nearby freeway routes. Estimated arrival times are typically around 15 minutes to I-24, 20 minutes to I-840, and 30 minutes to I-65, depending on traffic, your exact location, and current service calls. Call ${site.phoneDisplay} for the most accurate estimate.`,
+  },
+  {
+    question: "What areas do you serve around Murfreesboro?",
+    answer:
+      "We serve Murfreesboro, Franklin, Lebanon, Mt Juliet, Smyrna, Lavergne, Brentwood, and Rutherford County, TN with mobile tire service, emergency roadside assistance, and jumpstart support.",
+  },
+  {
+    question: "Do you repair flat tires on-site?",
+    answer:
+      "Yes. TreadForcePros provides on-site flat tire assistance for drivers at home, work, parking lots, and roadside locations. Our technicians come to you with the tools needed to address your tire issue without a trip to the shop.",
+  },
+  {
+    question: "Can you replace tires roadside?",
+    answer:
+      "Yes. We offer roadside tire replacement support for cars, trucks, and daily drivers. Whether you have a spare ready or need replacement assistance, call TreadForcePros and we will help you find the best on-site solution.",
+  },
+  {
+    question: "Do you provide emergency tire services?",
+    answer:
+      "Yes. TreadForcePros offers 24/7 emergency tire and roadside help across Murfreesboro and surrounding areas. If you are stranded with a flat, blowout, or tire trouble, contact us for fast professional assistance.",
+  },
+  {
+    question: "How do I request mobile tire assistance?",
+    answer:
+      `Call ${site.phoneDisplay} or text our team to request service. Share your location, describe your tire issue, and we will dispatch a technician to come directly to you.`,
+  },
+];
+
+export const homepageCta = {
+  title: "Need tire help or roadside assistance?",
+  text: "Call TreadForcePros LLC today for fast, professional mobile tire and roadside service across Murfreesboro and Rutherford County.",
+} as const;
+
+export const homepageFaqDescription =
+  "Answers to common questions about our mobile tire and roadside service in Murfreesboro, TN.";
+
+export const faqs: FaqItem[] = [
   {
     question: "How long would it take you to get to me?",
     answer:
-      "TreadForcePros works to respond as quickly as possible for tire service and roadside assistance in the Murfreesboro, TN area. Estimated response times are typically around 20 minutes to I-840, 15 minutes to I-24, and 30 minutes to I-65, depending on traffic, your exact location, and current service calls. Call (615) 691-3823 for the most accurate arrival estimate.",
+      `TreadForcePros works to respond as quickly as possible for tire service and roadside assistance in the Murfreesboro, TN area. Estimated response times are typically around 20 minutes to I-840, 15 minutes to I-24, and 30 minutes to I-65, depending on traffic, your exact location, and current service calls. Call ${site.phoneDisplay} for the most accurate arrival estimate.`,
   },
   {
     question: "Do you offer mobile tire service in Murfreesboro, TN?",

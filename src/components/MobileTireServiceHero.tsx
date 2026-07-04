@@ -1,17 +1,7 @@
-import Image from "next/image";
 import { site, telHref, smsHref } from "@/lib/site";
+import { FreewayIllustratedMap } from "./FreewayIllustratedMap";
 
-export function PageHero({
-  title,
-  subtitle,
-  image,
-  imageAlt,
-}: {
-  title: string;
-  subtitle: string;
-  image: string;
-  imageAlt: string;
-}) {
+export function MobileTireServiceHero() {
   return (
     <section className="relative flex items-center overflow-hidden bg-ink min-h-[calc(100svh-9rem)]">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_25%,rgba(37,99,235,0.20),transparent_60%)]" />
@@ -23,37 +13,35 @@ export function PageHero({
               {site.primaryCity} &middot; {site.hours}
             </span>
             <h1 className="mt-6 text-4xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
-              {title}
+              Mobile Tire Service in Murfreesboro, TN
             </h1>
-            <p className="mt-5 text-lg text-slate-300 leading-relaxed max-w-xl">
-              {subtitle}
+            <p className="mt-5 text-lg font-medium text-white leading-relaxed max-w-xl">
+              Fast roadside tire help when and where you need it.
+            </p>
+            <p className="mt-4 text-lg text-slate-300 leading-relaxed max-w-xl">
+              Flat tire? Need roadside tire service fast? TreadForcePros brings
+              mobile tire help directly to you in Murfreesboro and nearby freeway
+              routes, with quick response times to I-24, I-840, and I-65.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <a
                 href={telHref}
+                aria-label={`Call TreadForcePros now at ${site.phoneDisplay}`}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-brand px-7 py-3.5 text-base font-semibold text-white shadow-lg shadow-brand/30 hover:bg-brand-light transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
               >
-                Call {site.phoneDisplay}
+                Call Now
               </a>
               <a
                 href={smsHref}
+                aria-label="Request mobile tire service by text message"
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-white/30 px-7 py-3.5 text-base font-semibold text-white hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
               >
-                Text Us Now
+                Request Service
               </a>
             </div>
           </div>
 
-          <div className="relative h-72 w-full overflow-hidden rounded-3xl ring-1 ring-white/10 shadow-2xl shadow-black/50 sm:h-96 lg:h-[clamp(20rem,60vh,32rem)]">
-            <Image
-              src={image}
-              alt={imageAlt}
-              fill
-              priority
-              sizes="(max-width: 1024px) 100vw, 600px"
-              className="object-cover"
-            />
-          </div>
+          <FreewayIllustratedMap />
         </div>
       </div>
     </section>
