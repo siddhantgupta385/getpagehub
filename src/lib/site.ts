@@ -274,3 +274,41 @@ export const gallery: { src: string; alt: string }[] = [
 export const telHref = `tel:+1${site.phoneRaw}`;
 export const smsHref = `sms:+1${site.phoneRaw}`;
 export const mailHref = `mailto:${site.email}`;
+
+/** Hero service coverage map — real coordinates for Murfreesboro and nearby interstates. */
+export const serviceCoverageMap = {
+  center: { lat: 35.8462, lng: -86.392 },
+  zoom: 9,
+  width: 640,
+  height: 480,
+  locations: [
+    {
+      id: "murfreesboro",
+      lat: 35.8462,
+      lng: -86.392,
+      label: "Murfreesboro, TN",
+      kind: "primary" as const,
+    },
+    {
+      id: "i24",
+      lat: 35.848,
+      lng: -86.278,
+      label: "15 min to I-24",
+      kind: "callout" as const,
+    },
+    {
+      id: "i840",
+      lat: 35.728,
+      lng: -86.355,
+      label: "20 min to I-840",
+      kind: "callout" as const,
+    },
+    {
+      id: "i65",
+      lat: 35.928,
+      lng: -86.558,
+      label: "30 min to I-65",
+      kind: "callout" as const,
+    },
+  ],
+} as const;
