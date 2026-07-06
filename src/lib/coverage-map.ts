@@ -120,6 +120,49 @@ export const SMOOTHED_HIGHWAYS = serviceCoverageMap.highways.map((route) => ({
   path: smoothPath(route.points),
 }));
 
+function pointDistance(a: LatLng, b: LatLng) {
+  return Math.hypot(a.lat - b.lat, a.lng - b.lng);
+}
+
+/** Point at a given fraction of a path's cumulative length (0 = start,
+ * 1 = end). Used to anchor each tooltip to a real point ON its highway
+ * polyline rather than an arbitrary or hand-picked coordinate. */
+function getPathPointAtFraction(path: readonly LatLng[], fraction: number): LatLng {
+  if (path.length === 0) throw new Error("Cannot sample an empty path");
+  if (path.length === 1) return { ...path[0] };
+
+  const segmentLengths: number[] = [];
+  let totalLength = 0;
+  for (let i = 0; i < path.length - 1; i++) {
+    const length = pointDistance(path[i], path[i + 1]);
+    segmentLengths.push(length);
+    totalLength += length;
+  }
+
+  const target = totalLength * Math.min(1, Math.max(0, fraction));
+  let travelled = 0;
+  for (let i = 0; i < segmentLengths.length; i++) {
+    const segmentLength = segmentLengths[i];
+    if (travelled + segmentLength >= target) {
+      const t = segmentLength === 0 ? 0 : (target - travelled) / segmentLength;
+      return {
+        lat: path[i].lat + (path[i + 1].lat - path[i].lat) * t,
+        lng: path[i].lng + (path[i + 1].lng - path[i].lng) * t,
+      };
+    }
+    travelled += segmentLength;
+  }
+
+  return { ...path[path.length - 1] };
+}
+
+/** The real LatLng at the midpoint of each highlighted highway's smoothed
+ * polyline — every travel-time tooltip anchors here, so it is always a
+ * geographic point ON the route it describes. */
+export const HIGHWAY_MIDPOINTS: Record<string, LatLng> = Object.fromEntries(
+  SMOOTHED_HIGHWAYS.map((route) => [route.id, getPathPointAtFraction(route.path, 0.5)]),
+);
+
 /** Points used for tight bounds fitting — highways and Murfreesboro only. */
 export function getCoverageBoundsPoints(): LatLng[] {
   return [
@@ -135,16 +178,8 @@ export function clampCoverageZoom(zoom: number): number {
   return Math.min(maxZoom, Math.max(minZoom, zoom + zoomBump));
 }
 
-/** Uniform padding for the initial fitBounds pass. Combined with fractional
- * zoom this keeps the highway network at ~70-80% of the visible frame across
- * breakpoints instead of the coarse ~50/90% swings integer zoom produces. */
+/** Uniform padding for the one-time fitBounds pass taken on load. Combined
+ * with fractional zoom this keeps the highway network at ~70-80% of the
+ * visible frame across breakpoints. This fit runs exactly once per mount —
+ * the map never re-fits, re-centers, or re-zooms itself afterward. */
 export const COVERAGE_FIT_PADDING = 44;
-
-/** Max fractional zoom levels the map is allowed to back away from the
- * highway fitBounds result to make room for travel-time callouts. Beyond
- * this the badge clamp logic (never allow clipping) takes over. */
-export const MAX_CALLOUT_ZOOM_OUT = 1.4;
-
-/** Fractional zoom step used while searching for a zoom level where every
- * callout fits without clamping. */
-export const CALLOUT_ZOOM_STEP = 0.1;

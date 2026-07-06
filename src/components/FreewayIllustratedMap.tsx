@@ -4,26 +4,18 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   GoogleMap,
   Marker,
-  OverlayView,
   Polyline,
   useJsApiLoader,
 } from "@react-google-maps/api";
 import { serviceCoverageMap } from "@/lib/site";
 import {
-  CALLOUT_ZOOM_STEP,
   COVERAGE_MAP_STYLES,
   COVERAGE_FIT_PADDING,
   getCoverageBoundsPoints,
-  MAX_CALLOUT_ZOOM_OUT,
   ROUTE_OVERLAY_OPTIONS,
   ROUTE_UNDERLAY_OPTIONS,
   SMOOTHED_HIGHWAYS,
 } from "@/lib/coverage-map";
-import {
-  calloutFitsInMap,
-  ESTIMATED_CALLOUT_SIZE,
-} from "@/lib/callout-position";
-import { latLngToPercent } from "@/lib/map-projection";
 import { CoverageMapFallback } from "./CoverageMapFallback";
 import { ClampedTravelTimeCallouts } from "./ClampedTravelTimeCallouts";
 
@@ -56,75 +48,29 @@ export function FreewayIllustratedMap() {
     [],
   );
 
-  const fitMapToCoverage = useCallback(
-    (map: google.maps.Map) => {
-      const bounds = new google.maps.LatLngBounds();
-      for (const point of getCoverageBoundsPoints()) {
-        bounds.extend(point);
-      }
+  // Frames the highway network exactly once when the map first mounts. This
+  // is the map's *only* viewport decision — nothing after this point ever
+  // calls fitBounds, setZoom, or panTo again, so the map can't visibly shift
+  // or "settle" after the user sees it.
+  const onMapLoad = useCallback((map: google.maps.Map) => {
+    mapRef.current = map;
 
-      // Fractional zoom lets fitBounds land on the exact zoom that fits the
-      // highway network tightly (no integer rounding), so the routes read
-      // as a consistent ~70-80% of the frame at every breakpoint.
-      map.fitBounds(bounds, COVERAGE_FIT_PADDING);
+    const bounds = new google.maps.LatLngBounds();
+    for (const point of getCoverageBoundsPoints()) {
+      bounds.extend(point);
+    }
 
-      google.maps.event.addListenerOnce(map, "idle", () => {
-        const mapDiv = map.getDiv();
-        const mapWidth = mapDiv.offsetWidth;
-        const mapHeight = mapDiv.offsetHeight;
-        if (mapWidth === 0 || mapHeight === 0) return;
+    // Fractional zoom lets fitBounds land on the exact zoom that fits the
+    // highway network tightly (no integer rounding), so the routes read as
+    // a consistent ~70-80% of the frame at whatever size the map mounts at.
+    map.fitBounds(bounds, COVERAGE_FIT_PADDING);
+  }, []);
 
-        const center = serviceCoverageMap.center;
-        // This zoom already guarantees the full highway network is on
-        // screen — only ever zoom OUT from here for callout room, never in,
-        // so the routes can never clip.
-        const baseZoom = map.getZoom() ?? serviceCoverageMap.minZoom;
-        const minZoom = baseZoom - MAX_CALLOUT_ZOOM_OUT;
-
-        const calloutsFitAtZoom = (targetZoom: number) =>
-          calloutLocations.every((location) => {
-            const position = latLngToPercent(
-              location.lat,
-              location.lng,
-              center,
-              targetZoom,
-              mapWidth,
-              mapHeight,
-            );
-            const anchorX = (position.left / 100) * mapWidth;
-            const anchorY = (position.top / 100) * mapHeight;
-
-            return calloutFitsInMap(
-              anchorX,
-              anchorY,
-              ESTIMATED_CALLOUT_SIZE.width,
-              ESTIMATED_CALLOUT_SIZE.height,
-              mapWidth,
-              mapHeight,
-              location.calloutOffset,
-            );
-          });
-
-        let zoom = baseZoom;
-        while (zoom > minZoom && !calloutsFitAtZoom(zoom)) {
-          zoom -= CALLOUT_ZOOM_STEP;
-        }
-
-        map.setZoom(zoom);
-        map.panTo(center);
-      });
-    },
-    [calloutLocations],
-  );
-
-  const onMapLoad = useCallback(
-    (map: google.maps.Map) => {
-      mapRef.current = map;
-      fitMapToCoverage(map);
-    },
-    [fitMapToCoverage],
-  );
-
+  // The map card's width is fluid (grid/flex layout), so its pixel size can
+  // change after mount (window resize, orientation change). Google Maps
+  // doesn't detect that on its own, so we still have to nudge it — but only
+  // to keep the *existing* center rendered correctly at the new size, never
+  // to pick a new center or zoom.
   useEffect(() => {
     if (!isLoaded || !mapRef.current) return;
 
@@ -132,14 +78,16 @@ export function FreewayIllustratedMap() {
     if (!container) return;
 
     const observer = new ResizeObserver(() => {
-      if (!mapRef.current) return;
-      google.maps.event.trigger(mapRef.current, "resize");
-      fitMapToCoverage(mapRef.current);
+      const map = mapRef.current;
+      if (!map) return;
+      const center = map.getCenter();
+      google.maps.event.trigger(map, "resize");
+      if (center) map.setCenter(center);
     });
 
     observer.observe(container);
     return () => observer.disconnect();
-  }, [isLoaded, fitMapToCoverage]);
+  }, [isLoaded]);
 
   if (!apiKey) {
     return <CoverageMapFallback />;
@@ -162,13 +110,20 @@ export function FreewayIllustratedMap() {
             zoom={serviceCoverageMap.minZoom}
             onLoad={onMapLoad}
             options={{
+              // Static service-coverage graphic: only manual zoom is
+              // allowed. No dragging, no scroll/pinch zoom, no keyboard pan
+              // — the viewport set on load is the only one that ever shows.
               zoomControl: true,
+              draggable: false,
+              scrollwheel: false,
+              disableDoubleClickZoom: true,
+              keyboardShortcuts: false,
+              gestureHandling: "none",
               mapTypeControl: false,
               streetViewControl: false,
               fullscreenControl: false,
               rotateControl: false,
               clickableIcons: false,
-              gestureHandling: "cooperative",
               styles: COVERAGE_MAP_STYLES,
               isFractionalZoomEnabled: true,
               minZoom: 9,
@@ -191,27 +146,16 @@ export function FreewayIllustratedMap() {
             ))}
 
             {primaryLocation && (
-              <>
-                <Marker
-                  position={{ lat: primaryLocation.lat, lng: primaryLocation.lng }}
-                  title={primaryLocation.label}
-                />
-                <OverlayView
-                  position={{ lat: primaryLocation.lat, lng: primaryLocation.lng }}
-                  mapPaneName={OverlayView.OVERLAY_LAYER}
-                  getPixelPositionOffset={(width, height) => ({
-                    x: -(width / 2),
-                    y: -(height + 36),
-                  })}
-                >
-                  <div className="pointer-events-none whitespace-nowrap rounded-[10px] bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.14)] sm:text-[12px]">
-                    {primaryLocation.label}
-                  </div>
-                </OverlayView>
-              </>
+              <Marker
+                position={{ lat: primaryLocation.lat, lng: primaryLocation.lng }}
+                title={primaryLocation.label}
+              />
             )}
 
-            <ClampedTravelTimeCallouts locations={calloutLocations} />
+            <ClampedTravelTimeCallouts
+              locations={calloutLocations}
+              primaryLocation={primaryLocation}
+            />
           </GoogleMap>
         )}
       </div>

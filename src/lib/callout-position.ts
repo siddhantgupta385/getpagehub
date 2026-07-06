@@ -2,52 +2,6 @@ export const CALLOUT_EDGE_PADDING = 20;
 
 const ANCHOR_GAP = 10;
 
-/** Conservative estimate before DOM measurement is available. */
-export const ESTIMATED_CALLOUT_SIZE = { width: 148, height: 28 } as const;
-
-function getPreferredCalloutBox(
-  anchorX: number,
-  anchorY: number,
-  labelWidth: number,
-  labelHeight: number,
-  preferredOffset: { x: number; y: number },
-) {
-  const left = anchorX - labelWidth / 2 + preferredOffset.x;
-  const top = anchorY - labelHeight - ANCHOR_GAP + preferredOffset.y;
-
-  return {
-    left,
-    top,
-    right: left + labelWidth,
-    bottom: top + labelHeight,
-  };
-}
-
-export function calloutFitsInMap(
-  anchorX: number,
-  anchorY: number,
-  labelWidth: number,
-  labelHeight: number,
-  mapWidth: number,
-  mapHeight: number,
-  preferredOffset: { x: number; y: number },
-) {
-  const box = getPreferredCalloutBox(
-    anchorX,
-    anchorY,
-    labelWidth,
-    labelHeight,
-    preferredOffset,
-  );
-
-  return (
-    box.left >= CALLOUT_EDGE_PADDING &&
-    box.top >= CALLOUT_EDGE_PADDING &&
-    box.right <= mapWidth - CALLOUT_EDGE_PADDING &&
-    box.bottom <= mapHeight - CALLOUT_EDGE_PADDING
-  );
-}
-
 export function clampCalloutPosition(
   anchorX: number,
   anchorY: number,
@@ -78,6 +32,9 @@ type CalloutLayoutInput = {
   width: number;
   height: number;
   offset: { x: number; y: number };
+  /** Fixed boxes (e.g. the Murfreesboro label) never move to resolve a
+   * collision — the other, movable box is pushed fully clear of it instead. */
+  fixed?: boolean;
 };
 
 type CalloutBox = { left: number; top: number; width: number; height: number };
@@ -100,6 +57,37 @@ function clampBox(box: CalloutBox, mapWidth: number, mapHeight: number) {
     CALLOUT_EDGE_PADDING,
     Math.min(box.top, mapHeight - box.height - CALLOUT_EDGE_PADDING),
   );
+}
+
+function overlapArea(a: CalloutBox, b: CalloutBox) {
+  const overlapX = Math.max(
+    0,
+    Math.min(a.left + a.width, b.left + b.width) - Math.max(a.left, b.left),
+  );
+  const overlapY = Math.max(
+    0,
+    Math.min(a.top + a.height, b.top + b.height) - Math.max(a.top, b.top),
+  );
+  return overlapX * overlapY;
+}
+
+/** Sum of a candidate pair's overlap against every *other* box in the
+ * layout, plus their overlap with each other — lets the resolver avoid
+ * "fixing" one collision by creating a worse one elsewhere. */
+function totalOverlapForCandidate(
+  boxes: CalloutBox[],
+  indexA: number,
+  indexB: number,
+  candidateA: CalloutBox,
+  candidateB: CalloutBox,
+) {
+  let sum = overlapArea(candidateA, candidateB);
+  for (let k = 0; k < boxes.length; k++) {
+    if (k === indexA || k === indexB) continue;
+    sum += overlapArea(candidateA, boxes[k]);
+    sum += overlapArea(candidateB, boxes[k]);
+  }
+  return sum;
 }
 
 /**
@@ -126,7 +114,7 @@ export function layoutCallouts<T extends CalloutLayoutInput>(
     return { ...item, left, top };
   });
 
-  const MAX_SEPARATION_PASSES = 8;
+  const MAX_SEPARATION_PASSES = 24;
   for (let pass = 0; pass < MAX_SEPARATION_PASSES; pass++) {
     let moved = false;
 
@@ -136,34 +124,71 @@ export function layoutCallouts<T extends CalloutLayoutInput>(
         const b = boxes[j];
         if (!boxesOverlap(a, b)) continue;
 
-        moved = true;
+        // A fixed box (e.g. the always-central Murfreesboro label) never
+        // moves; the movable sibling absorbs the entire separation instead
+        // of the usual 50/50 split.
+        const aFixed = a.fixed === true;
+        const bFixed = b.fixed === true;
+        if (aFixed && bFixed) continue;
+        const aShare = aFixed ? 0 : bFixed ? 1 : 0.5;
+        const bShare = bFixed ? 0 : aFixed ? 1 : 0.5;
+
         const overlapX =
           Math.min(a.left + a.width, b.left + b.width) - Math.max(a.left, b.left);
         const overlapY =
           Math.min(a.top + a.height, b.top + b.height) - Math.max(a.top, b.top);
+        const amountX = overlapX + 2;
+        const amountY = overlapY + 2;
 
-        if (overlapX < overlapY) {
-          const shift = overlapX / 2 + 1;
-          if (a.left <= b.left) {
-            a.left -= shift;
-            b.left += shift;
-          } else {
-            a.left += shift;
-            b.left -= shift;
-          }
-        } else {
-          const shift = overlapY / 2 + 1;
-          if (a.top <= b.top) {
-            a.top -= shift;
-            b.top += shift;
-          } else {
-            a.top += shift;
-            b.top -= shift;
+        // A map edge can cancel out a shift in the "obvious" direction (the
+        // side the box already leans toward). Try all four push directions
+        // and keep whichever actually clears the most overlap, instead of
+        // getting permanently stuck against a boundary.
+        type Candidate = { aLeft: number; aTop: number; bLeft: number; bTop: number };
+        const candidates: Candidate[] = [
+          { aLeft: a.left - amountX * aShare, aTop: a.top, bLeft: b.left + amountX * bShare, bTop: b.top },
+          { aLeft: a.left + amountX * aShare, aTop: a.top, bLeft: b.left - amountX * bShare, bTop: b.top },
+          { aLeft: a.left, aTop: a.top - amountY * aShare, bLeft: b.left, bTop: b.top + amountY * bShare },
+          { aLeft: a.left, aTop: a.top + amountY * aShare, bLeft: b.left, bTop: b.top - amountY * bShare },
+        ];
+
+        let best: (Candidate & { totalOverlap: number; moveDist: number }) | null = null;
+        for (const candidate of candidates) {
+          const clampedA = { left: candidate.aLeft, top: candidate.aTop, width: a.width, height: a.height };
+          const clampedB = { left: candidate.bLeft, top: candidate.bTop, width: b.width, height: b.height };
+          if (!aFixed) clampBox(clampedA, mapWidth, mapHeight);
+          if (!bFixed) clampBox(clampedB, mapWidth, mapHeight);
+
+          const totalOverlap = totalOverlapForCandidate(boxes, i, j, clampedA, clampedB);
+          const moveDist =
+            Math.abs(clampedA.left - a.left) +
+            Math.abs(clampedA.top - a.top) +
+            Math.abs(clampedB.left - b.left) +
+            Math.abs(clampedB.top - b.top);
+
+          if (
+            !best ||
+            totalOverlap < best.totalOverlap - 0.01 ||
+            (Math.abs(totalOverlap - best.totalOverlap) <= 0.01 && moveDist < best.moveDist)
+          ) {
+            best = {
+              aLeft: clampedA.left,
+              aTop: clampedA.top,
+              bLeft: clampedB.left,
+              bTop: clampedB.top,
+              totalOverlap,
+              moveDist,
+            };
           }
         }
 
-        clampBox(a, mapWidth, mapHeight);
-        clampBox(b, mapWidth, mapHeight);
+        if (best && best.moveDist > 0.01) {
+          a.left = best.aLeft;
+          a.top = best.aTop;
+          b.left = best.bLeft;
+          b.top = best.bTop;
+          moved = true;
+        }
       }
     }
 
@@ -171,6 +196,19 @@ export function layoutCallouts<T extends CalloutLayoutInput>(
   }
 
   return boxes;
+}
+
+/** Closest point on a box's perimeter to an external point — used to anchor
+ * the leader line at the badge edge nearest its highway anchor. */
+export function nearestPointOnBox(
+  x: number,
+  y: number,
+  box: { left: number; top: number; width: number; height: number },
+) {
+  return {
+    x: Math.max(box.left, Math.min(x, box.left + box.width)),
+    y: Math.max(box.top, Math.min(y, box.top + box.height)),
+  };
 }
 
 export function applyCalloutBadgeStyles(element: HTMLDivElement) {
@@ -186,4 +224,15 @@ export function applyCalloutBadgeStyles(element: HTMLDivElement) {
   element.style.fontFamily = "var(--font-geist-sans), Roboto, Arial, sans-serif";
   element.style.boxShadow = "0 2px 10px rgba(0, 0, 0, 0.14)";
   element.style.position = "absolute";
+}
+
+/** Slightly bolder variant for the central Murfreesboro hub label, so it
+ * reads as distinct from the three highway travel-time badges. */
+export function applyPrimaryBadgeStyles(element: HTMLDivElement) {
+  applyCalloutBadgeStyles(element);
+  element.style.borderRadius = "10px";
+  element.style.padding = "4px 10px";
+  element.style.fontSize = "11px";
+  element.style.fontWeight = "600";
+  element.style.color = "#1f2937";
 }

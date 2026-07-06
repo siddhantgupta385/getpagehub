@@ -328,27 +328,29 @@ export const serviceCoverageMap = {
     },
     {
       id: "i24",
-      lat: 35.849,
-      lng: -86.282,
+      // No lat/lng here — the real anchor point is computed from the I-24
+      // polyline itself (see HIGHWAY_MIDPOINTS in coverage-map.ts), so the
+      // tooltip is always a geographic point ON the highway, not a
+      // hand-picked or screen-relative coordinate.
+      routeId: "i24",
       kind: "callout" as const,
       label: "15 min to I-24",
-      calloutOffset: { x: -24, y: -20 },
+      // Purely vertical: the badge sits directly above its route anchor.
+      calloutOffset: { x: 0, y: -10 },
     },
     {
       id: "i840",
-      lat: 35.792,
-      lng: -86.33,
+      routeId: "i840",
       kind: "callout" as const,
       label: "20 min to I-840",
-      calloutOffset: { x: 0, y: -30 },
+      calloutOffset: { x: 0, y: -10 },
     },
     {
       id: "i65",
-      lat: 35.895,
-      lng: -86.49,
+      routeId: "i65",
       kind: "callout" as const,
       label: "30 min to I-65",
-      calloutOffset: { x: 24, y: 10 },
+      calloutOffset: { x: 0, y: -10 },
     },
   ],
 } as const;
