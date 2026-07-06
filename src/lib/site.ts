@@ -275,12 +275,49 @@ export const telHref = `tel:+1${site.phoneRaw}`;
 export const smsHref = `sms:+1${site.phoneRaw}`;
 export const mailHref = `mailto:${site.email}`;
 
-/** Hero service coverage map — real coordinates for Murfreesboro and nearby interstates. */
+/** Hero service coverage map — Murfreesboro-centered with I-24, I-840, and I-65 routes. */
 export const serviceCoverageMap = {
   center: { lat: 35.8462, lng: -86.392 },
-  zoom: 9,
   width: 640,
   height: 480,
+  minZoom: 11,
+  maxZoom: 13,
+  zoomBump: 2,
+  fitPadding: 16,
+  paddingFactor: 1.02,
+  highways: [
+    {
+      id: "i24",
+      label: "I-24",
+      points: [
+        { lat: 35.844, lng: -86.428 },
+        { lat: 35.846, lng: -86.392 },
+        { lat: 35.847, lng: -86.355 },
+        { lat: 35.848, lng: -86.318 },
+        { lat: 35.849, lng: -86.282 },
+      ],
+    },
+    {
+      id: "i840",
+      label: "I-840",
+      points: [
+        { lat: 35.808, lng: -86.41 },
+        { lat: 35.798, lng: -86.37 },
+        { lat: 35.792, lng: -86.33 },
+        { lat: 35.798, lng: -86.295 },
+      ],
+    },
+    {
+      id: "i65",
+      label: "I-65",
+      points: [
+        { lat: 35.895, lng: -86.49 },
+        { lat: 35.865, lng: -86.478 },
+        { lat: 35.835, lng: -86.468 },
+        { lat: 35.805, lng: -86.458 },
+      ],
+    },
+  ],
   locations: [
     {
       id: "murfreesboro",
@@ -291,24 +328,27 @@ export const serviceCoverageMap = {
     },
     {
       id: "i24",
-      lat: 35.848,
-      lng: -86.278,
+      lat: 35.849,
+      lng: -86.282,
       label: "15 min to I-24",
       kind: "callout" as const,
+      calloutOffset: { x: 34, y: -4 },
     },
     {
       id: "i840",
-      lat: 35.728,
-      lng: -86.355,
+      lat: 35.792,
+      lng: -86.33,
       label: "20 min to I-840",
       kind: "callout" as const,
+      calloutOffset: { x: 0, y: 22 },
     },
     {
       id: "i65",
-      lat: 35.928,
-      lng: -86.558,
+      lat: 35.895,
+      lng: -86.49,
       label: "30 min to I-65",
       kind: "callout" as const,
+      calloutOffset: { x: -36, y: -8 },
     },
   ],
 } as const;
