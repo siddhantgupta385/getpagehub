@@ -1,3 +1,6 @@
+"use client";
+
+import { useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { serviceCoverageMap } from "@/lib/site";
 import {
@@ -5,8 +8,15 @@ import {
   latLngToPercent,
   type LatLng,
 } from "@/lib/map-projection";
-import { getCoverageBoundsPoints } from "@/lib/coverage-map";
+import { getCoverageBoundsPoints, SMOOTHED_HIGHWAYS } from "@/lib/coverage-map";
 import { getServiceMapSource } from "@/lib/static-map";
+import { layoutCallouts } from "@/lib/callout-position";
+import { TravelTimeCalloutBadge } from "./TravelTimeCalloutBadge";
+
+type CalloutLocation = Extract<
+  (typeof serviceCoverageMap.locations)[number],
+  { kind: "callout" }
+>;
 
 function getFallbackViewport() {
   const { center, width, height, minZoom, maxZoom, paddingFactor, zoomBump } =
@@ -41,8 +51,8 @@ function HighwayRoutesOverlay({
       preserveAspectRatio="xMidYMid meet"
       aria-hidden="true"
     >
-      {serviceCoverageMap.highways.map((route) => {
-        const points = route.points
+      {SMOOTHED_HIGHWAYS.map((route) => {
+        const points = route.path
           .map((point) => {
             const position = latLngToPercent(
               point.lat,
@@ -62,7 +72,7 @@ function HighwayRoutesOverlay({
               points={points}
               fill="none"
               stroke="#ffffff"
-              strokeWidth={1.8}
+              strokeWidth={2.6}
               strokeLinecap="round"
               strokeLinejoin="round"
               opacity={0.95}
@@ -70,8 +80,8 @@ function HighwayRoutesOverlay({
             <polyline
               points={points}
               fill="none"
-              stroke="#2563eb"
-              strokeWidth={1.2}
+              stroke="#1d4ed8"
+              strokeWidth={1.6}
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -82,14 +92,130 @@ function HighwayRoutesOverlay({
   );
 }
 
+function ClampedFallbackCallouts({
+  locations,
+  center,
+  zoom,
+  mapWidth,
+  mapHeight,
+}: {
+  locations: CalloutLocation[];
+  center: LatLng;
+  zoom: number;
+  mapWidth: number;
+  mapHeight: number;
+}) {
+  const measureRef = useRef<HTMLDivElement>(null);
+  const [labelSizes, setLabelSizes] = useState<Record<string, DOMRect>>({});
+
+  useLayoutEffect(() => {
+    if (!measureRef.current) return;
+
+    const sizes: Record<string, DOMRect> = {};
+    for (const child of Array.from(measureRef.current.children)) {
+      const id = child.getAttribute("data-callout-id");
+      if (!id) continue;
+      sizes[id] = child.getBoundingClientRect();
+    }
+    setLabelSizes(sizes);
+  }, [locations, mapWidth, mapHeight]);
+
+  const items = locations
+    .map((location) => {
+      const size = labelSizes[location.id];
+      if (!size) return null;
+
+      const position = latLngToPercent(
+        location.lat,
+        location.lng,
+        center,
+        zoom,
+        mapWidth,
+        mapHeight,
+      );
+
+      return {
+        id: location.id,
+        label: location.label,
+        anchorX: (position.left / 100) * mapWidth,
+        anchorY: (position.top / 100) * mapHeight,
+        width: size.width,
+        height: size.height,
+        offset: location.calloutOffset,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
+
+  const positioned =
+    items.length === locations.length
+      ? layoutCallouts(items, mapWidth, mapHeight)
+      : [];
+
+  return (
+    <>
+      <div
+        ref={measureRef}
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-[9999px] top-0 opacity-0"
+      >
+        {locations.map((location) => (
+          <div key={location.id} data-callout-id={location.id}>
+            <TravelTimeCalloutBadge label={location.label} />
+          </div>
+        ))}
+      </div>
+
+      {positioned.map((box) => (
+        <div
+          key={box.id}
+          className="pointer-events-none absolute z-[7]"
+          style={{
+            left: `${box.left}px`,
+            top: `${box.top}px`,
+          }}
+        >
+          <TravelTimeCalloutBadge label={box.label} />
+        </div>
+      ))}
+    </>
+  );
+}
+
 export function CoverageMapFallback() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
   const { width, height, locations } = serviceCoverageMap;
   const { center, zoom } = getFallbackViewport();
   const map = getServiceMapSource({ center, zoom, width, height });
 
+  const calloutLocations = locations.filter(
+    (location): location is CalloutLocation => location.kind === "callout",
+  );
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const updateSize = () => {
+      setMapSize({
+        width: container.clientWidth,
+        height: container.clientHeight,
+      });
+    };
+
+    updateSize();
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className="animate-fade-up w-full overflow-hidden rounded-3xl shadow-xl shadow-black/30 ring-1 ring-white/10">
-      <div className="relative aspect-[4/3] w-full bg-[#e8eaed]">
+      <div
+        ref={containerRef}
+        className="relative aspect-[4/3] w-full overflow-hidden bg-[#e8eaed]"
+        style={{ padding: 0 }}
+      >
         {map.mode === "google-embed" ? (
           <iframe
             src={map.url}
@@ -118,6 +244,8 @@ export function CoverageMapFallback() {
         />
 
         {locations.map((location) => {
+          if (location.kind !== "primary") return null;
+
           const position = latLngToPercent(
             location.lat,
             location.lng,
@@ -126,47 +254,47 @@ export function CoverageMapFallback() {
             width,
             height,
           );
-          const offset =
-            "calloutOffset" in location
-              ? location.calloutOffset
-              : { x: 0, y: 0 };
-
-          if (location.kind === "primary") {
-            return (
-              <div
-                key={location.id}
-                className="pointer-events-none absolute z-[8] -translate-x-1/2"
-                style={{
-                  left: `${position.left}%`,
-                  top: `${position.top}%`,
-                }}
-              >
-                <div className="flex -translate-y-full flex-col items-center">
-                  <span className="rounded bg-white/90 px-1 py-0.5 text-[8px] font-semibold text-slate-800 shadow-sm ring-1 ring-slate-200/60 sm:text-[9px]">
-                    {location.label}
-                  </span>
-                  <span className="mt-0.5 h-2 w-2 rounded-full bg-[#ea4335] ring-1 ring-white shadow-sm" />
-                </div>
-              </div>
-            );
-          }
 
           return (
             <div
               key={location.id}
-              className="pointer-events-none absolute z-[5] opacity-75"
+              className="pointer-events-none absolute z-[8] -translate-x-1/2"
               style={{
-                left: `calc(${position.left}% + ${offset.x}px)`,
-                top: `calc(${position.top}% + ${offset.y}px)`,
-                transform: "translate(-50%, -100%)",
+                left: `${position.left}%`,
+                top: `${position.top}%`,
               }}
             >
-              <span className="rounded bg-white/85 px-1 py-px text-[7px] font-medium text-slate-500 sm:text-[8px]">
-                {location.label}
-              </span>
+              <div className="flex -translate-y-full flex-col items-center">
+                <span className="mb-1 whitespace-nowrap rounded-[10px] bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.14)] sm:text-[12px]">
+                  {location.label}
+                </span>
+                <svg
+                  width="22"
+                  height="30"
+                  viewBox="0 0 22 30"
+                  aria-hidden="true"
+                  className="drop-shadow-sm"
+                >
+                  <path
+                    d="M11 0C4.925 0 0 4.925 0 11c0 8.25 11 19 11 19s11-10.75 11-19c0-6.075-4.925-11-11-11z"
+                    fill="#ea4335"
+                  />
+                  <circle cx="11" cy="11" r="4.2" fill="#ffffff" />
+                </svg>
+              </div>
             </div>
           );
         })}
+
+        {mapSize.width > 0 && mapSize.height > 0 && (
+          <ClampedFallbackCallouts
+            locations={calloutLocations}
+            center={center}
+            zoom={zoom}
+            mapWidth={mapSize.width}
+            mapHeight={mapSize.height}
+          />
+        )}
       </div>
     </div>
   );
